@@ -1,0 +1,119 @@
+---
+title: "Visually weighted time paths in R"
+author: "David García-León"
+date: "February 4, 2016"
+output:
+  html_document:
+    theme: default
+    highlight: default
+---
+<!-- More at http://rmarkdown.rstudio.com/html_document_format.html#overview -->
+
+<!-- themes: "default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", "cosmo", "lumen", "paper", "sandstone", "simplex", and "yeti" -->
+
+<!-- highlight: "default", "tango", "pygments", "kate", "monochrome", "espresso", "zenburn", "haddock", and "textmate" -->
+
+<!-- Look C:\Users\Usuario\Desktop\Documents\R\Rmarkdown\custom_css for custom css -->
+
+## Introduction to vwIRF 
+
+The general idea behind this code has been borrowed from the original work by <a href="http://www.fight-entropy.com/2012/07/visually-weighted-regression.html" target="_blank">Hsiang (2012)</a> and its adaptation to R by <a href="http://www.nicebread.de/visually-weighted-regression-in-r-a-la-solomon-hsiang/" target="_blank">Schönbrodt (2012)</a>. I adapt here some paragraphs of <a href="http://www.fight-entropy.com/" target="_blank">Sol's blog</a> on visually weighted regressions to motivate the use of visually weighted plots in order to efficiently convey uncertainty.
+
+Uncertainty in statistical analysis can be efficiently and effectively communicated using the visual properties of lines.  Altering the "visual weight" of lines to depict the quality of information represented clearly communicates statistical confidence even when readers are unfamiliar or reckless with the formal and abstract definitions of statistical uncertainty. Here, we present an example by decreasing the color-saturation of time paths lines. The result is a simple, visually intuitive and graphically compact display of statistical uncertainty.
+
+At a simple glance, the researcher or policy maker can have a clear and intuitive picture of the uncertainty associated to a determined estimation or simulation. In the event that she has to make a decision based on data, she will have a strong understanding of the possible outcomes that might result from her decision. Needless to say, the reliability of this method rests on a precise, quantitative estimate of uncertainty. An example of visually weighted techniques applied to regression analysis is depicted in the following figure.
+
+![Caption](C:\Users\Usuario\Desktop\Documents\R\scripts\shaded_plots\Schönbrodt_examples_1.png)
+
+The goal of visually-weighted displaying techniques is to take advantage of viewer's psychological response to images in order to focus their attention on the results that are the most informative. The general innovation here is to utilise the visual properties of lines to communicate statistical uncertainty intuitively.
+
+## Browsing the code
+
+Here, I describe the internal functioning and options of the R function `vwIRF.R`, which will yield visually weighted time paths taking multiple individual time paths as input (I suggest to use N>100 lines as input). I decided to name this function `vwIRF.R` because I foresee its direct application to the uncertainty analysis of Impulse Response Functions, very popular in macroeconomic simulations derived from DSGE models.
+
+Following Schönbrodt, I implemented the code in R using `ggplot2`. To make this code work, you will also need the followwing R libraries: `reshape2`. `plyr`. `RColorBrewer` and `extrafont`.
+
+    Variables in your database must be arranged in columns; rows are reserved for time steps.
+
+The code calculates density estimates for each vertical cut (_y-slice_) of your input lines. The area under the density curve always is 1, so the ink is constant for each _y-slice_. The figure is shaded according to these density estimates.
+
+**Nice and simple**. After _sourcing_ the function in your main file (in case that this is not located in the same working directory as your main file), typing
+
+`p<-vwIRF(data)` 
+
+would yield
+
+<img src="C:\Users\Usuario\Desktop\Documents\R\vwIRF\figure\CO2.png" width="600" />
+
+Since this function is built upon the `ggplot2` library, the resulting output can be modified adding additional layers to our graphical object. For instance,
+
+`p <- p + ylim(1000,3000)`
+
+<img src="C:\Users\Usuario\Desktop\Documents\R\vwIRF\figure\CO2_scaled.png" width="600" />
+
+will scale the _y-axis_ accordingly.
+
+### Colours
+
+I am a BIG fan of colours. In my opinion, choosing a determined palette of colours could enhance or completely spoil your results. `vwIRF` uses the library `RColorBrewer`, which is based on the astonishing work by <a href="http://www.geog.psu.edu/people/brewer-cynthia" target="_blank">Cindy Brewer</a> and her already classic <a href="http://colorbrewer2.org/" target="_blank">ColorBrewer</a> colour palettes.
+
+The command
+
+`p<-vwIRF(data, palette=brewer.pal(9,"Blues"))`
+
+<img src="C:\Users\Usuario\Desktop\Documents\R\vwIRF\figure\CO2_blues.png" width="600" />
+
+would yield a picture with colours continously degraded from a palette of nine blues, whereas
+
+`p<-vwIRF(data, palette=colorRampPalette(c("#48D1CC","#5F9EA0","#4682B4"))(20))`
+
+<img src="C:\Users\Usuario\Desktop\Documents\R\vwIRF\figure\CO2_colour.png" width="600" />
+
+will create a 20-level degrafdation using three solid colours as base colours.
+
+For further details on its syntax, see the `RColorBrewer` <a href="https://cran.r-project.org/web/packages/RColorBrewer/RColorBrewer.pdf" target="_blank">package documentation</a>.
+
+
+### Other options
+
+should be included as additional arguments to vwIRF
+
+#### title
+If you want to provide a title to your picture, you can do it typing
+
+`p<-vwIRF(data, title="your_title")`
+
+However, as I mentioned earlier, this code is implemented using the `ggplot2` library. Hence, any additional feature to your picture can be added after `vvwIRF` is run.
+    
+#### method
+`method`` rescales estimated densities according to ineal, squared or root sqaured ("rootsq") weights.
+
+`p<-vwIRF(data, method="squared")`
+
+#### shade.alpha
+Controls the gradient of colour degradation. Should lie between 0 and 1. Values close to 0 imply a smooth transition of colours (default=.1). 
+
+`p<-vwIRF(data, shade.alpha=0.7)`
+
+#### spag
+Shows input lines (default = FALSE).
+
+`p<-vwIRF(data, spag)`
+
+#### spag.color
+Changes the colour of input lines.
+
+`p<-vwIRF(data, spag, spag.color="darkblue")`
+
+#### show.median
+Shows the median of the input lines (default = FALSE).
+
+`p<-vwIRF(data,show.median)`
+
+#### median.col
+Changes colour of median.
+
+``p<-vwIRF(data, spag, median.col="darkblue")`
+
+<hr width="50%" align="left">
+This page has been created in R with [`rmarkdown`](http://rmarkdown.rstudio.com/).
